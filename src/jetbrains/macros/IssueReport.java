@@ -74,7 +74,6 @@ public class IssueReport extends YouTrackAuthAwareMacroBase {
                     final StringBuilder pagination = new StringBuilder();
                     final PageContext pageContext = (PageContext) renderContext;
                     final Page page = pageManager.getPage(pageContext.getSpaceKey(), pageContext.getPageTitle());
-                    final String thisPageUrl = page.getUrlPath();
                     final Map<String, Object> myContext = new HashMap<String, Object>();
                     final int startIssue = currentPage == 1 ? 0 : (currentPage - 1) * pageSize + 1;
                     final List<Issue> issues = youTrack.issues.query("project: " + project + " " + query, startIssue, pageSize);
@@ -90,14 +89,18 @@ public class IssueReport extends YouTrackAuthAwareMacroBase {
                         myContext.put(Strings.ASSIGNEE, issue.getAssignee() != null ? issue.getAssignee().getFullName() : Strings.UNASSIGNED);
                         rows.append(VelocityUtils.getRenderedTemplate(Strings.ROW, myContext));
                     }
-                    for (int i = 1; i <= numPages; i++) {
-                        myContext.clear();
-                        myContext.putAll(context);
-                        myContext.put("num", String.valueOf(i));
-                        myContext.put("param", Strings.PAGINATION_PARAM);
-                        myContext.put("url", thisPageUrl);
-                        myContext.put("style", i == currentPage ? "font-weight:bold;" : "font-weight:normal;");
-                        pagination.append(VelocityUtils.getRenderedTemplate(Strings.PAGINATION_SINGLE, myContext));
+                    if(page != null) {
+                        final String thisPageUrl = page.getUrlPath();
+
+                        for (int i = 1; i <= numPages; i++) {
+                            myContext.clear();
+                            myContext.putAll(context);
+                            myContext.put("num", String.valueOf(i));
+                            myContext.put("param", Strings.PAGINATION_PARAM);
+                            myContext.put("url", thisPageUrl);
+                            myContext.put("style", i == currentPage ? "font-weight:bold;" : "font-weight:normal;");
+                            pagination.append(VelocityUtils.getRenderedTemplate(Strings.PAGINATION_SINGLE, myContext));
+                        }
                     }
                     context.put("pagination", request != null ? pagination.toString() : Strings.EMPTY);
                     context.put("rows", rows.toString());
